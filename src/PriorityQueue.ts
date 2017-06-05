@@ -1,57 +1,75 @@
-export type HeapNode<T,P> = {
-	element: T,
-	priority: P,
-	subHeaps: HeapNode<T,P>[]
+export type List<T,P> = {
+	head: Heap<T,P>
+	next: List<T,P>
 } | undefined
 
-function append<T,P>( list: HeapNode<T,P>[], item: HeapNode<T,P> ): HeapNode<T,P>[] {
-  const nlist = list.slice()
-  nlist.push( item )
-  return nlist
-}
+export type Heap<T,P> = {
+	element: T,
+	priority: P,
+	subHeaps: List<T,P>
+} | undefined
 
-function mergePair<T,P>( a: HeapNode<T,P>, b: HeapNode<T,P> ): HeapNode<T,P> {
+function merge<T,P>( a: Heap<T,P>, b: Heap<T,P>, comparator: ( ap: P, bp: P ) => number ): Heap<T,P> {
   if( !a ) {
     return b
   } else if( !b ) {
     return a
-  } else if( a.priority < b.priority ) {
-		return { element: a.element, priority: a.priority, subHeaps: append( a.subHeaps, b ) }
+	} else if( comparator( a.priority, b.priority ) < 0 ) {
+		return { element: a.element, priority: a.priority, subHeaps: { head: b, next: a.subHeaps }}
   } else {
-		return { element: b.element, priority: b.priority, subHeaps: append( b.subHeaps, a ) }
+		return { element: b.element, priority: b.priority, subHeaps: { head: a, next: b.subHeaps }}
   }
 }
 
-function mergeRec<T,P>( list: HeapNode<T,P>[], idx: number ): HeapNode<T,P> {
-  if( idx >= list.length ) {
-    return undefined
+function mergePairs<T,P>( list: List<T,P>, comparator: ( ap: P, bp: P ) => number ): Heap<T,P> {
+	if( !list ) {
+		return undefined
+	} else if ( !list.next ) {
+		return list.head
 	} else {
-		return mergePair( mergePair( list[idx], list[idx+1] ), mergeRec( list, idx+2 ))
+		return merge( merge( list.head, list.next.head, comparator ), mergePairs( list.next.next, comparator ), comparator )
 	}
 }
 
-function makeHeap<T,P>( arraylike: [T,P][] ): HeapNode<T,P> {
-	const nodes = []
-	for ( const [element,priority] of arraylike ) {
-		nodes.push( {element, priority, subHeaps: []} )
-	}
-	return mergeRec( nodes, 0 )
+function insert<T,P>( heap: Heap<T,P>, element: T, priority: P, comparator: ( ap: P, bp: P ) => number ): Heap<T,P> {
+	return merge( heap, { element, priority, subHeaps: undefined }, comparator )
 }
 
-function pushHeap<T,P>( heap: HeapNode<T,P>, element: T, priority: P ): HeapNode<T,P> {
-	return merge( heap, makeHeap( [[element,priority]] ))//{element, priority, subHeaps: []} )
-}
-
-function popHeap<T,P>( heap: HeapNode<T,P> ): HeapNode<T,P> {
+function deleteMin<T,P>( heap: Heap<T,P>, comparator: ( ap: P, bp: P ) => number ): Heap<T,P> {
 	if ( heap ) {
-		return mergeRec( heap.subHeaps, 0 )
+		return mergePairs( heap.subHeaps, comparator )
 	} else {
 		return undefined
 	}
 }
 
-function merge<T,P>( ...nodes: HeapNode<T,P>[] ) {
-  return mergeRec( nodes, 0 )
+function has<T,P>( heap: Heap<T,P>, element: T ): boolean {
+	if ( !heap ) {
+		return false
+	} else if ( heap.element === element ) {
+		return true
+	} else {
+		for ( let node: List<T,P> = heap.subHeaps; node; node = node.next ) {
+			if ( has( node.head, element )) {
+				return true
+			}
+		}
+		return false
+	}
+}
+
+function forEach<T,P,Z>(
+	heap: Heap<T,P>,
+	callbackFn: (this: Z, element: T, priority: P, pq: PriorityQueue<T,P>) => void,
+	pq: PriorityQueue<T,P>,
+	thisArg?: Z
+) {
+	if ( heap ) {
+		callbackFn.call( thisArg, heap.element, heap.priority, pq )
+		for ( let node: List<T,P> = heap.subHeaps; node; node = node.next ) {
+			forEach( node.head, callbackFn, pq, thisArg )
+		}
+	}
 }
 
 export class PriorityQueue<T,P> {
@@ -65,7 +83,7 @@ export class PriorityQueue<T,P> {
 		}
 	}
 
-	protected root: HeapNode<T,P> = undefined
+	protected root: Heap<T,P> = undefined
 	protected _length: number
 
 	get length() {
@@ -76,37 +94,76 @@ export class PriorityQueue<T,P> {
 		protected comparator: (a: P, b: P) => number = PriorityQueue.DEFAULT_COMPARATOR,
 		arraylike?: [T,P][],
 	) {
-		this.root = arraylike !== undefined ? makeHeap( arraylike ) : undefined
-		this._length = arraylike !== undefined ? arraylike.length : 0
+		let root = undefined
+		let length = 0
+		if ( arraylike ) {
+			for ( const [element,priority] of arraylike ) {
+				root = insert( root, element, priority, comparator )
+				length++
+			}
+		}
+		this.root = root
+		this._length = length
 	}
 
-	isEmpty() {
+	isEmpty(): boolean {
 		return this.root === undefined
 	}
 
+	clear(): PriorityQueue<T,P> {
+		if ( this.isEmpty() ) {
+			return this
+		} else {
+			return new PriorityQueue<T,P>( this.comparator )
+		}
+	}
+
 	first(): T | undefined {
-		return this.root === undefined ? undefined : this.root.element
+		return !this.root ? undefined : this.root.element
 	}
 
 	firstPriority(): P | undefined {
-		return this.root === undefined ? undefined : this.root.priority
+		return !this.root ? undefined : this.root.priority
 	}
 
 	enqueue( element: T, priority: P ): PriorityQueue<T,P> {
 		const q = new PriorityQueue<T,P>( this.comparator )
-		q.root = pushHeap( this.root, element, priority )
-		q._length = this.length + 1
+		q.root = insert( this.root, element, priority, this.comparator )
+		q._length = this._length + 1
 		return q
 	}
 
 	dequeue(): PriorityQueue<T,P> {
-		if ( this.root === undefined ) {
+		const newRoot = deleteMin( this.root, this.comparator )
+		if ( !this.root ) {
 			return this
 		} else {
 			const q = new PriorityQueue<T,P>( this.comparator )
-			q.root = popHeap( this.root )
-			q._length = this.length - 1
+			q.root = newRoot
+			q._length = this._length - 1
 			return q
 		}
+	}
+
+	merge( heap: PriorityQueue<T,P> ): PriorityQueue<T,P> {
+		if ( heap === this ) {
+			return this
+		} else {
+			const q = new PriorityQueue<T,P>( this.comparator )
+			q.root = merge( this.root, heap.root, this.comparator )
+			q._length = this._length + heap.length
+			return q
+		}
+	}
+
+	has( element: T ): boolean {
+		return has( this.root, element )
+	}
+
+	forEach<Z>(
+		callbackFn: (this: Z, element: T, priority: P, pq: this) => void,
+		thisArg?: Z
+	): void {
+		forEach( this.root, callbackFn, this, thisArg )
 	}
 }
