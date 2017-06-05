@@ -6,8 +6,8 @@
 Persistent priority queue
 =========================
 
-Persistent priority queue implemented with pairing heap. Implementation allows
-fast peek, enqueue, dequeue.
+Persistent priority queue implemented with [pairing heap](https://en.wikipedia.org/wiki/Pairing_heap).
+Implementation allows fast peek, enqueue, dequeue.
 
 
 ## constructor(comparator = DEFAULT\_COMPARATOR, arraylike?: \[T,P][])
