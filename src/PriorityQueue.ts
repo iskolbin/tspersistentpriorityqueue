@@ -1,169 +1,157 @@
-export type List<T,P> = {
-	head: Heap<T,P>
-	next: List<T,P>
-} | undefined
+import * as PairingHeap from './PairingHeap'
+import { PriorityQueueIterator } from './PriorityQueueIterator'
 
-export type Heap<T,P> = {
-	element: T,
-	priority: P,
-	subHeaps: List<T,P>
-} | undefined
-
-function merge<T,P>( a: Heap<T,P>, b: Heap<T,P>, comparator: ( ap: P, bp: P ) => number ): Heap<T,P> {
-  if( !a ) {
-    return b
-  } else if( !b ) {
-    return a
-	} else if( comparator( a.priority, b.priority ) < 0 ) {
-		return { element: a.element, priority: a.priority, subHeaps: { head: b, next: a.subHeaps }}
-  } else {
-		return { element: b.element, priority: b.priority, subHeaps: { head: a, next: b.subHeaps }}
-  }
-}
-
-function mergePairs<T,P>( list: List<T,P>, comparator: ( ap: P, bp: P ) => number ): Heap<T,P> {
-	if( !list ) {
-		return undefined
-	} else if ( !list.next ) {
-		return list.head
+export const DEFAULT_COMPARATOR = (a: any, b: any): number => {
+	if ( a < b ) {
+		return -1
+	} else if ( a > b ) {
+		return 1
 	} else {
-		return merge( merge( list.head, list.next.head, comparator ), mergePairs( list.next.next, comparator ), comparator )
+		return 0
 	}
 }
 
-function insert<T,P>( heap: Heap<T,P>, element: T, priority: P, comparator: ( ap: P, bp: P ) => number ): Heap<T,P> {
-	return merge( heap, { element, priority, subHeaps: undefined }, comparator )
+export interface Data<T,P> {
+	heap: PairingHeap.Heap<T,P>
+	size: number
 }
 
-function deleteMin<T,P>( heap: Heap<T,P>, comparator: ( ap: P, bp: P ) => number ): Heap<T,P> {
-	if ( heap ) {
-		return mergePairs( heap.subHeaps, comparator )
-	} else {
-		return undefined
+export const NIL: Data<any,any> = { heap: undefined, size: 0 }
+
+export function make<T,P>( arraylike?: [T,P][], comparator: (a: P, b: P) => number = DEFAULT_COMPARATOR ): Data<T,P> {
+	let heap = undefined
+	let size = 0
+	if ( arraylike ) {
+		for( const [element,priority] of arraylike ) {
+			heap = PairingHeap.insert( heap, element, priority, comparator )
+			size++
+		}
 	}
+	return { heap, size }
 }
 
-function has<T,P>( heap: Heap<T,P>, element: T ): boolean {
+export function isEmpty<T,P>( {size}: Data<T,P> ): boolean {
+	return size === 0
+}
+
+export function clear<T,P>( _?: Data<T,P> ): Data<T,P> {
+	return NIL
+}
+
+export function first<T,P>( {heap}: Data<T,P> ): T | undefined {
+	return !heap ? undefined : heap.element
+}
+
+export function firstPriority<T,P>( {heap}: Data<T,P> ): P | undefined {
+		return !heap ? undefined : heap.priority
+}
+
+export function enqueue<T,P>( {heap,size}: Data<T,P>, element: T, priority: P, comparator: (a: P, b: P) => number = DEFAULT_COMPARATOR ): Data<T,P> {
+	return { heap: PairingHeap.insert( heap, element, priority, comparator ), size: size + 1 }
+}
+
+export function dequeue<T,P>( queue: Data<T,P>, comparator: (a: P, b: P) => number = DEFAULT_COMPARATOR ): Data<T,P> {
+	const {heap,size} = queue
 	if ( !heap ) {
-		return false
-	} else if ( heap.element === element ) {
-		return true
+		return queue
 	} else {
-		for ( let node: List<T,P> = heap.subHeaps; node; node = node.next ) {
-			if ( has( node.head, element )) {
-				return true
-			}
-		}
-		return false
+		return { heap: PairingHeap.deleteMin( heap, comparator ), size: size - 1 }
 	}
 }
 
-function forEach<T,P,Z>(
-	heap: Heap<T,P>,
-	callbackFn: (this: Z, element: T, priority: P, pq: PriorityQueue<T,P>) => void,
-	pq: PriorityQueue<T,P>,
-	thisArg?: Z
-) {
-	if ( heap ) {
-		callbackFn.call( thisArg, heap.element, heap.priority, pq )
-		for ( let node: List<T,P> = heap.subHeaps; node; node = node.next ) {
-			forEach( node.head, callbackFn, pq, thisArg )
+export function merge<T,P>( queue: Data<T,P>, otherQueue: Data<T,P>, comparator: (a: P, b: P) => number = DEFAULT_COMPARATOR ): Data<T,P> {
+	if ( queue == otherQueue ) {
+		return queue
+	} else {
+		return { heap: PairingHeap.merge( queue.heap, otherQueue.heap, comparator ), size: queue.size + otherQueue.size }
+	}
+}
+
+export function has<T,P>( queue: Data<T,P>, element: T ): boolean {
+	const iterator = new PriorityQueueIterator( queue )
+	while ( iterator.hasNext()) {
+		if ( iterator.getNext()[0] === element ) {
+			return true
 		}
+	}
+	return false
+}
+
+export function forEach<T,P,Z,Y>(
+	queue: Data<T,P>,
+	callbackFn: (this: Z, element: T, priority: P, callbackArg: Y) => void,
+	thisArg?: Z,
+	callbackArg: any = queue
+): void {
+	const iterator = new PriorityQueueIterator( queue )
+	while ( iterator.hasNext()) {
+		const [element, priority] = iterator.getNext()
+		callbackFn.call( thisArg, element, priority, callbackArg )
 	}
 }
 
 export class PriorityQueue<T,P> {
-	static DEFAULT_COMPARATOR = ( a: any, b: any ): number => {
-		if ( a < b ) {
-			return -1
-		} else if ( a > b ) {
-			return 1
-		} else {
-			return 0
-		}
-	}
+	protected queue: Data<T,P>
 
-	protected root: Heap<T,P> = undefined
-	protected _length: number
-
-	get length() {
-		return this._length
+	get size() {
+		return this.queue.size
 	}
 
 	constructor( 
-		protected comparator: (a: P, b: P) => number = PriorityQueue.DEFAULT_COMPARATOR,
 		arraylike?: [T,P][],
+		protected comparator: (a: P, b: P) => number = DEFAULT_COMPARATOR,
 	) {
-		let root = undefined
-		let length = 0
-		if ( arraylike ) {
-			for ( const [element,priority] of arraylike ) {
-				root = insert( root, element, priority, comparator )
-				length++
-			}
-		}
-		this.root = root
-		this._length = length
+		this.queue = make( arraylike, comparator )
+	}
+
+	static ofData<T,P>( queue: Data<T,P>, comparator: (a: P, b: P) => number = DEFAULT_COMPARATOR ): PriorityQueue<T,P> {
+		const q = new PriorityQueue<T,P>( undefined, comparator )
+		q.queue = queue
+		return q
 	}
 
 	isEmpty(): boolean {
-		return this.root === undefined
+		return isEmpty( this.queue )
 	}
 
 	clear(): PriorityQueue<T,P> {
 		if ( this.isEmpty() ) {
 			return this
 		} else {
-			return new PriorityQueue<T,P>( this.comparator )
+			return new PriorityQueue<T,P>( undefined, this.comparator )
 		}
 	}
 
 	first(): T | undefined {
-		return !this.root ? undefined : this.root.element
+		return first( this.queue )
 	}
 
 	firstPriority(): P | undefined {
-		return !this.root ? undefined : this.root.priority
+		return firstPriority( this.queue )
 	}
 
 	enqueue( element: T, priority: P ): PriorityQueue<T,P> {
-		const q = new PriorityQueue<T,P>( this.comparator )
-		q.root = insert( this.root, element, priority, this.comparator )
-		q._length = this._length + 1
-		return q
+		return PriorityQueue.ofData( enqueue( this.queue, element, priority, this.comparator ), this.comparator )
 	}
 
 	dequeue(): PriorityQueue<T,P> {
-		const newRoot = deleteMin( this.root, this.comparator )
-		if ( !this.root ) {
-			return this
-		} else {
-			const q = new PriorityQueue<T,P>( this.comparator )
-			q.root = newRoot
-			q._length = this._length - 1
-			return q
-		}
+		if ( this.isEmpty()) return this
+		return PriorityQueue.ofData( dequeue( this.queue, this.comparator ), this.comparator )
 	}
 
-	merge( heap: PriorityQueue<T,P> ): PriorityQueue<T,P> {
-		if ( heap === this ) {
-			return this
-		} else {
-			const q = new PriorityQueue<T,P>( this.comparator )
-			q.root = merge( this.root, heap.root, this.comparator )
-			q._length = this._length + heap.length
-			return q
-		}
+	merge( queue: PriorityQueue<T,P> ): PriorityQueue<T,P> {
+		if ( this === queue ) return this
+		return PriorityQueue.ofData( merge( this.queue, queue.queue ), this.comparator )
 	}
 
 	has( element: T ): boolean {
-		return has( this.root, element )
+		return has( this.queue, element )
 	}
 
 	forEach<Z>(
 		callbackFn: (this: Z, element: T, priority: P, pq: this) => void,
 		thisArg?: Z
 	): void {
-		forEach( this.root, callbackFn, this, thisArg )
+		forEach( this.queue, callbackFn, thisArg, this )
 	}
 }

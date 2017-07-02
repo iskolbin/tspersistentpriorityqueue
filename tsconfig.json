@@ -15,7 +15,11 @@
 		"sourceMap": true,
 		"inlineSources": true,	
 		"declaration": true,
-		"target": "es5"
+		"target": "es5",
+		"lib": [
+			"es5",
+			"es2015.iterable"
+		]
 	},
 	"include": [
 		"src/**/*"
