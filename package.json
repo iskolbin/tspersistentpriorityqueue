@@ -1,12 +1,18 @@
 {
   "name": "tspersistentpriorityqueue",
+	"version": "0.2.4",
+  "description": "Perisistent Priority Queue implemented with Pairing Heaps for TS",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iskolbin/tspersistentpriorityqueue.git"
+  },
+	"bugs": "https://github.com/iskolbin/tspersistentpriorityqueue/issues",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
   "repository": "github.com/iskolbin/",
-  "description": "Perisistent Priority Queue implemented with Pairing Heaps for TS",
-  "version": "0.2.3",
   "author": "iskolbin",
   "license": "MIT",
+	"keywords": ["persistent","collection","pairing-heap","priority-queue"],
   "scripts": {
 		"test": "./node_modules/typescript/bin/tsc --experimentalDecorators -lib es5,es2015.iterable -t es5 test.ts && ./node_modules/nyc/bin/nyc.js --reporter html --reporter text ./node_modules/mocha/bin/mocha test.js",
     "lib": "rm lib/*; ./node_modules/typescript/bin/tsc",
@@ -14,9 +20,7 @@
     "prepare": "npm run lib"
   },
   "devDependencies": {
-    "typescript": "^2.3.4"
-  },
-  "dependencies": {
+    "typescript": "^2.3.4",
     "assert": "^1.4.1",
     "mocha": "^3.4.2",
     "mocha-typescript": "^1.1.4",
