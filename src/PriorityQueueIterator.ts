@@ -6,7 +6,11 @@ export class PriorityQueueIterator<T,P> implements Iterator<[T,P]> {
 	protected stack: PairingHeap.Heap<T,P>[] = []
 
 	constructor( queue: PriorityQueue.Data<T,P> ) {
-		this.stack = queue.size > 0 ? [queue.heap] : []
+		if ( queue.heap ) {
+			this.stack = [queue.heap]
+		} else {
+			this.stack = []
+		}
 	}
 
 	hasNext(): boolean {

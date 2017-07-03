@@ -22,7 +22,7 @@ export function merge<T,P>( a: MaybeHeap<T,P>, b: MaybeHeap<T,P>, comparator: (a
   }
 }
 
-export function mergePairs<T,P>( list: List<T,P>, comparator: (a: P, b: P) => number ): Heap<T,P> {
+export function mergePairs<T,P>( list: List<T,P>, comparator: (a: P, b: P) => number ): MaybeHeap<T,P> {
 	if( !list ) {
 		return undefined
 	} else if ( !list.next ) {
@@ -32,10 +32,10 @@ export function mergePairs<T,P>( list: List<T,P>, comparator: (a: P, b: P) => nu
 	}
 }
 
-export function insert<T,P>( heap: Heap<T,P>, element: T, priority: P, comparator: (a: P, b: P) => number ): Heap<T,P> {
-	return merge( heap, { entry: [element, priority], subHeaps: undefined }, comparator )
+export function insert<T,P>( heap: MaybeHeap<T,P>, element: T, priority: P, comparator: (a: P, b: P) => number ): Heap<T,P> {
+	return merge( heap, { entry: [element, priority], subHeaps: undefined }, comparator ) as Heap<T,P>
 }
 
-export function deleteMin<T,P>( heap: Heap<T,P>, comparator: (a: P, b: P) => number ): Heap<T,P> {
+export function deleteMin<T,P>( heap: Heap<T,P>, comparator: (a: P, b: P) => number ): MaybeHeap<T,P> {
 	return mergePairs( heap.subHeaps, comparator )
 }
