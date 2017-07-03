@@ -96,6 +96,10 @@ export function forEach<T,P,Z,Y>(
 	}
 }
 
+export function iterator<T,P>( queue: Data<T,P> ): PriorityQueueIterator<T,P> {
+	return new PriorityQueueIterator<T,P>( queue )
+}
+
 export class PriorityQueue<T,P> {
 	protected queue: Data<T,P>
 
@@ -166,6 +170,10 @@ export class PriorityQueue<T,P> {
 	}
 
 	iterator(): PriorityQueueIterator<T,P> {
-		return new PriorityQueueIterator<T,P>( this.queue )
+		return iterator( this.queue )
+	}
+
+	[Symbol.iterator]() {
+		return this.iterator()
 	}
 }

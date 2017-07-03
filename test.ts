@@ -187,7 +187,7 @@ declare const console: any
 		
 		PQ.forEach( q, (e,p) => {
 			
-		} )
+		})
 	}
 
 	@test("clear method clears items (only if not empty)") clearCase() {
@@ -271,9 +271,10 @@ declare const console: any
 			nq = nq.enqueue( `${i}`, i )
 		}
 		for ( let i = -500; i < 1000; i++ ) {
-			arr[i] = [`${i}`,i]
+			arr.push( [`${i}`, i] )
 		}
-		arr.reverse()
+		arr.sort( (a,b) => b[1] - a[1] )
+		equal( arr.length, nq.size )
 		for ( let i = 0; i < nq.size; i++ ) {
 			deepEqual( nq.first(), arr[i] )
 			nq = nq.dequeue()
