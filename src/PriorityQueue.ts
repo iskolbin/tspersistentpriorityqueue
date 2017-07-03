@@ -38,12 +38,16 @@ export function clear<T,P>( _?: Data<T,P> ): Data<T,P> {
 	return NIL
 }
 
-export function first<T,P>( {heap}: Data<T,P> ): T | undefined {
-	return !heap ? undefined : heap.element
+export function first<T,P>( {heap}: Data<T,P> ): [T,P] | undefined {
+	return !heap ? undefined : heap.entry
+}
+
+export function firstElement<T,P>( {heap}: Data<T,P> ): T | undefined {
+		return !heap ? undefined : heap.entry[0]
 }
 
 export function firstPriority<T,P>( {heap}: Data<T,P> ): P | undefined {
-		return !heap ? undefined : heap.priority
+		return !heap ? undefined : heap.entry[1]
 }
 
 export function enqueue<T,P>( {heap,size}: Data<T,P>, element: T, priority: P, comparator: (a: P, b: P) => number = DEFAULT_COMPARATOR ): Data<T,P> {
@@ -122,8 +126,12 @@ export class PriorityQueue<T,P> {
 		}
 	}
 
-	first(): T | undefined {
+	first(): [T,P] | undefined {
 		return first( this.queue )
+	}
+
+	firstElement(): T | undefined {
+		return firstElement( this.queue )
 	}
 
 	firstPriority(): P | undefined {

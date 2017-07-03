@@ -48,18 +48,18 @@ import { equal, deepEqual } from 'assert'
 		nq = nq.enqueue( "3", 3 )
 		nq = nq.enqueue( "4", 4 )
 		equal( nq.size, 6 )
-		equal( nq.first(), "0" )
+		equal( nq.firstElement(), "0" )
 		nq = nq.dequeue()
-		equal( nq.first(), "1" )
+		equal( nq.firstElement(), "1" )
 		nq = nq.dequeue()
-		equal( nq.first(), "2" )
+		equal( nq.firstElement(), "2" )
 		nq = nq.dequeue()
 		equal( nq.size, 3 )
-		equal( nq.first(), "3" )
+		equal( nq.firstElement(), "3" )
 		nq = nq.dequeue()
-		equal( nq.first(), "4" )
+		equal( nq.firstElement(), "4" )
 		nq = nq.dequeue()
-		equal( nq.first(), "5" )
+		equal( nq.firstElement(), "5" )
 		nq = nq.dequeue()
 		equal( nq.size, 0 )
 	}
@@ -79,11 +79,11 @@ import { equal, deepEqual } from 'assert'
 		equal( nq.size, 0 )
 		nq = nq.enqueue( "second", 2 ).enqueue( "first", 1 ).enqueue( "third", 3 )
 		equal( nq.size, 3 )
-		equal( nq.first(), "first" )
+		equal( nq.firstElement(), "first" )
 		nq = nq.dequeue()
-		equal( nq.first(), "second" )
+		equal( nq.firstElement(), "second" )
 		nq = nq.dequeue()
-		equal( nq.first(), "third" )
+		equal( nq.firstElement(), "third" )
 		nq = nq.dequeue()
 		equal( nq.size, 0 )
 		nq = nq.dequeue()
@@ -91,17 +91,17 @@ import { equal, deepEqual } from 'assert'
 		equal( nq.size, 0 )
 	}
 
-	@test("custom comparator: max heap") case6() {
+	@test("custom comparator: max heap") maxHeap() {
 		const comparator = (a: number, b: number): number => a > b ? -1 : a < b ? 1 : 0
 		let nq = new PriorityQueue<string,number>( [], comparator )
 		equal( nq.size, 0 )
 		nq = nq.enqueue( "second", 2 ).enqueue( "first", 1 ).enqueue( "third", 3 )
 		equal( nq.size, 3 )
-		equal( nq.first(), "third" )
+		equal( nq.firstElement(), "third" )
 		nq = nq.dequeue()
-		equal( nq.first(), "second" )
+		equal( nq.firstElement(), "second" )
 		nq = nq.dequeue()
-		equal( nq.first(), "first" )
+		equal( nq.firstElement(), "first" )
 		nq = nq.dequeue()
 		equal( nq.size, 0 )
 	}
@@ -126,15 +126,22 @@ import { equal, deepEqual } from 'assert'
 		equal( nq.size, 0 )
 	}
 	
-	@test("first returns first item or undefined if queue is empty") firstElement() {
+	@test("first returns first item and priority or undefined if queue is empty") first() {
 		let nq = new PriorityQueue<string,number>()
 		equal( nq.size, 0 )
 		equal( nq.first(), undefined )
 		equal( nq.firstPriority(), undefined )
 		nq = nq.enqueue( "first", 1 ).enqueue( "second", 2 ).enqueue( "third", 3 )
-		equal( nq.first(), "first" )
+		deepEqual( nq.first(), ["first",1] )
 	}
 
+	@test("firstElement returns first element or undefined if queue is empty") firstElement() {
+		let nq = new PriorityQueue<string,number>()
+		equal( nq.size, 0 )
+		nq = nq.enqueue( "first", 1 ).enqueue( "second", 2 ).enqueue( "third", 3 )
+		equal( nq.firstElement(), "first" )
+	}
+	
 	@test("firstPriority returns first priority or undefined if queue is empty") firstPriority() {
 		let nq = new PriorityQueue<string,number>()
 		equal( nq.size, 0 )
@@ -154,13 +161,13 @@ import { equal, deepEqual } from 'assert'
 			items.push( [element,priority] )
 		})
 		items.sort( ([_,priority1],[_e,priority2]): number => priority1 - priority2 )
-		equal( nq.first(), items[0][0] )
+		equal( nq.firstElement(), items[0][0] )
 		equal( nq.firstPriority(), items[0][1] )
 		nq = nq.dequeue()
-		equal( nq.first(), items[1][0] )
+		equal( nq.firstElement(), items[1][0] )
 		equal( nq.firstPriority(), items[1][1] )
 		nq = nq.dequeue()
-		equal( nq.first(), items[2][0] )
+		equal( nq.firstElement(), items[2][0] )
 		equal( nq.firstPriority(), items[2][1] )
 	}
 
@@ -186,16 +193,16 @@ import { equal, deepEqual } from 'assert'
 		equal( nq2, nq )
 		let nq3 = nq1.merge( nq )
 		equal( nq3.size, 4 )
-		equal( nq3.first(), "first" )
+		equal( nq3.firstElement(), "first" )
 		equal( nq3.firstPriority(), 1 )
 		nq3 = nq3.dequeue()
-		equal( nq3.first(), "second" )
+		equal( nq3.firstElement(), "second" )
 		equal( nq3.firstPriority(), 2 )
 		nq3 = nq3.dequeue()
-		equal( nq3.first(), "third" )
+		equal( nq3.firstElement(), "third" )
 		equal( nq3.firstPriority(), 3 )
 		nq3 = nq3.dequeue()
-		equal( nq3.first(), "fourth" )
+		equal( nq3.firstElement(), "fourth" )
 		equal( nq3.firstPriority(), 4 )
 		nq3 = nq3.dequeue()
 		equal( nq3.size, 0 )

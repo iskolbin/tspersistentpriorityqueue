@@ -4,8 +4,7 @@ export type List<T,P> = {
 } | undefined
 
 export type Heap<T,P> = {
-	element: T,
-	priority: P,
+	entry: [T,P],
 	subHeaps: List<T,P>
 } | undefined
 
@@ -14,10 +13,10 @@ export function merge<T,P>( a: Heap<T,P>, b: Heap<T,P>, comparator: (a: P, b: P)
     return b
   } else if( !b ) {
     return a
-	} else if( comparator( a.priority, b.priority ) < 0 ) {
-		return { element: a.element, priority: a.priority, subHeaps: { head: b, next: a.subHeaps }}
+	} else if( comparator( a.entry[1], b.entry[1] ) < 0 ) {
+		return { entry: a.entry, subHeaps: { head: b, next: a.subHeaps }}
   } else {
-		return { element: b.element, priority: b.priority, subHeaps: { head: a, next: b.subHeaps }}
+		return { entry: b.entry, subHeaps: { head: a, next: b.subHeaps }}
   }
 }
 
@@ -32,7 +31,7 @@ export function mergePairs<T,P>( list: List<T,P>, comparator: (a: P, b: P) => nu
 }
 
 export function insert<T,P>( heap: Heap<T,P>, element: T, priority: P, comparator: (a: P, b: P) => number ): Heap<T,P> {
-	return merge( heap, { element, priority, subHeaps: undefined }, comparator )
+	return merge( heap, { entry: [element, priority], subHeaps: undefined }, comparator )
 }
 
 export function deleteMin<T,P>( heap: Heap<T,P>, comparator: (a: P, b: P) => number ): Heap<T,P> {
