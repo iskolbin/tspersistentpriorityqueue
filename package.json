@@ -4,7 +4,7 @@
   "types": "./lib/index.d.ts",
   "repository": "github.com/iskolbin/",
   "description": "Perisistent Priority Queue implemented with Pairing Heaps for TS",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "author": "iskolbin",
   "license": "MIT",
   "scripts": {

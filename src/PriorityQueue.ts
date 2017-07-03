@@ -56,7 +56,7 @@ export function enqueue<T,P>( {heap,size}: Data<T,P>, element: T, priority: P, c
 
 export function dequeue<T,P>( queue: Data<T,P>, comparator: (a: P, b: P) => number = DEFAULT_COMPARATOR ): Data<T,P> {
 	const {heap,size} = queue
-	if ( !heap ) {
+	if ( size === 0 ) {
 		return queue
 	} else {
 		return { heap: PairingHeap.deleteMin( heap, comparator ), size: size - 1 }
@@ -70,6 +70,8 @@ export function merge<T,P>( queue: Data<T,P>, otherQueue: Data<T,P>, comparator:
 		return { heap: PairingHeap.merge( queue.heap, otherQueue.heap, comparator ), size: queue.size + otherQueue.size }
 	}
 }
+
+declare const console: any
 
 export function has<T,P>( queue: Data<T,P>, element: T ): boolean {
 	const iterator = new PriorityQueueIterator( queue )
@@ -161,5 +163,9 @@ export class PriorityQueue<T,P> {
 		thisArg?: Z
 	): void {
 		forEach( this.queue, callbackFn, thisArg, this )
+	}
+
+	iterator(): PriorityQueueIterator<T,P> {
+		return new PriorityQueueIterator<T,P>( this.queue )
 	}
 }

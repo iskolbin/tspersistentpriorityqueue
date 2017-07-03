@@ -6,9 +6,11 @@ export type List<T,P> = {
 export type Heap<T,P> = {
 	entry: [T,P],
 	subHeaps: List<T,P>
-} | undefined
+}
 
-export function merge<T,P>( a: Heap<T,P>, b: Heap<T,P>, comparator: (a: P, b: P) => number ): Heap<T,P> {
+export type MaybeHeap<T,P> = Heap<T,P> | undefined
+
+export function merge<T,P>( a: MaybeHeap<T,P>, b: MaybeHeap<T,P>, comparator: (a: P, b: P) => number ): MaybeHeap<T,P> {
   if( !a ) {
     return b
   } else if( !b ) {
@@ -35,9 +37,5 @@ export function insert<T,P>( heap: Heap<T,P>, element: T, priority: P, comparato
 }
 
 export function deleteMin<T,P>( heap: Heap<T,P>, comparator: (a: P, b: P) => number ): Heap<T,P> {
-	if ( heap ) {
-		return mergePairs( heap.subHeaps, comparator )
-	} else {
-		return undefined
-	}
+	return mergePairs( heap.subHeaps, comparator )
 }
